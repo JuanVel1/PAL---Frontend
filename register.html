@@ -95,6 +95,40 @@
                 <p id="username-error" class="mt-1 text-sm text-red-600 hidden">Username must be at least 3
                     characters</p>
             </div>
+            <!-- User Type Selection -->
+            <div class="mt-6 mb-2">
+                <label class="block text-sm font-medium text-gray-700 mb-3">I am registering as:</label>
+                <div class="flex space-x-4">
+                    <div class="flex-1">
+                        <input type="radio" id="student" name="userType" value="student" class="hidden peer" checked>
+                        <label for="student"
+                               class="flex items-center justify-center p-3 text-gray-700 bg-white border border-gray-300 rounded-md cursor-pointer peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-600 hover:bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round" class="mr-2">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                            </svg>
+                            Student
+                        </label>
+                    </div>
+                    <div class="flex-1">
+                        <input type="radio" id="instructor" name="userType" value="instructor" class="hidden peer">
+                        <label for="instructor"
+                               class="flex items-center justify-center p-3 text-gray-700 bg-white border border-gray-300 rounded-md cursor-pointer peer-checked:bg-purple-600 peer-checked:text-white peer-checked:border-purple-600 hover:bg-gray-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round" class="mr-2">
+                                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5z"/>
+                                <circle cx="12" cy="10" r="2"/>
+                                <path d="M12 14v4"/>
+                                <path d="M12 14h3"/>
+                            </svg>
+                            Instructor
+                        </label>
+                    </div>
+                </div>
+            </div>
 
             <!-- Email Field -->
             <div>
