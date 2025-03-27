@@ -1,13 +1,15 @@
-import Header from "./Header.jsx";
+import Header from "../Components/Header.jsx";
+import {Link} from "react-router-dom";
+
 
 export default function Login() {
     return (<>
             <Header/>
-            <main class="container mx-auto px-4 py-8">
+            <main className="container mx-auto px-4 py-8">
                 <div className="flex items-center space-x-2 text-sm mb-8">
-                    <a href="index.html" className="text-gray-600 hover:text-purple-600">
+                    <Link to={"/"} className="text-gray-600 hover:text-purple-600">
                         Home
-                    </a>
+                    </Link>
                     <span className="text-gray-400">&gt;</span>
                     <span className="text-gray-800">Login</span>
                 </div>
