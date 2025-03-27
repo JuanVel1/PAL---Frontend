@@ -4,27 +4,59 @@ import CategoryButton from '../Components/CategoryButton.tsx';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { getCourses } from '../Services/CourseService';
+import { getCategories } from '../Services/CategoryService';
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Course {
+  id: number;
+  title: string;
+  description: string;
+  category_id: number;
+  price: number;
+  average_grade: number;
+}
 
 const Courses: React.FC = () => {
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getCourses();
-        setCourses(data.data);
+        setLoading(true);
+        // Obtener cursos y categorías en paralelo
+        const [coursesData, categoriesData] = await Promise.all([
+          getCourses(),
+          getCategories()
+        ]);
+        
+        setCourses(coursesData.data);
+        setCategories(categoriesData.data);
       } catch (error) {
-        console.error('Error al obtener los cursos', error);
+        console.error('Error al obtener datos:', error);
+        setError('Error al cargar los datos. Por favor intenta nuevamente.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCourses();
+    fetchData();
   }, []);
 
-  if (loading) return <p>Cargando cursos...</p>;
+  // Función para obtener el nombre de la categoría por ID
+  const getCategoryName = (categoryId: number) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'General';
+  };
+
+  if (loading) return <div className="text-center py-8">Cargando cursos...</div>;
+  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
 
   return (
     <div className="container mx-auto p-6">
@@ -65,22 +97,21 @@ const Courses: React.FC = () => {
               <button className="text-gray-800 border-b-2 border-purple-600 pb-2 font-medium">
                 All Courses
               </button>
-              <button className="text-gray-600 hover:text-gray-800 pb-2">Popular</button>
-              <button className="text-gray-600 hover:text-gray-800 pb-2">New</button>
-              <button className="text-gray-600 hover:text-gray-800 pb-2">Free</button>
-              <button className="text-gray-600 hover:text-gray-800 pb-2">Premium</button>
             </div>
           </div>
         </section>
 
+        {/* Categories Section */}
         <section className="mb-12">
           <h2 className="text-xl font-bold mb-4">Categories</h2>
           <div className="flex flex-wrap gap-4">
-            <CategoryButton label="Programming" />
-            <CategoryButton label="Design" />
-            <CategoryButton label="Business" />
-            <CategoryButton label="Marketing" />
-            <CategoryButton label="Languages" />
+            {categories.map((category) => (
+              <CategoryButton 
+                key={category.id} 
+                label={category.name} 
+                // Puedes añadir onClick para filtrar por categoría si lo deseas
+              />
+            ))}
           </div>
         </section>
 
@@ -91,8 +122,8 @@ const Courses: React.FC = () => {
             {courses.slice(0, 3).map((course) => (
               <CourseCard
                 key={course.id}
-                icon="code" // Puedes ajustar según el campo category_id
-                category={`Category ${course.category_id}`} // Se usa un texto de ejemplo para category_id
+                icon="code"
+                category={getCategoryName(course.category_id)}
                 title={course.title}
                 description={course.description}
                 courseId={course.id}
@@ -105,13 +136,12 @@ const Courses: React.FC = () => {
 
         {/* Most Popular Section */}
         <section className="mb-12">
-          <h2 className="text-xl font-bold mb-6">Most Popular</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.slice(3, 6).map((course) => (
               <CourseCard
                 key={course.id}
                 icon="monitor"
-                category={`Category ${course.category_id}`}
+                category={getCategoryName(course.category_id)}
                 title={course.title}
                 description={course.description}
                 courseId={course.id}
@@ -121,13 +151,6 @@ const Courses: React.FC = () => {
             ))}
           </div>
         </section>
-
-        {/* Load More Button */}
-        <div className="flex justify-center">
-          <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md">
-            Load More Courses
-          </button>
-        </div>
       </main>
     </div>
   );

@@ -6,7 +6,7 @@ interface CourseCardProps {
     category: string;
     title: string;
     description: string;
-    courseId: string; // ID del curso para enrutamiento
+    courseId: number; // ID del curso para enrutamiento
     price: number;
     averageGrade: number;
 }
