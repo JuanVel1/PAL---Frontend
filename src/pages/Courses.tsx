@@ -1,20 +1,14 @@
 import React from 'react';
 import CourseCard from '../Components/CourseCard.tsx';
 import CategoryButton from '../Components/CategoryButton.tsx';
-import {Link} from "react-router-dom";
+import NavbarSite from '../Components/NavbarSite.tsx';
 import {Search} from "lucide-react"
 
 const Courses: React.FC = () => {
     return (
         <div className="container mx-auto p-6">
             <main className="container mx-auto px-4 py-8">
-                <div className="flex items-center space-x-2 text-sm mb-8">
-                    <Link to={"/"} className="text-gray-600 hover:text-purple-600">
-                        Home
-                    </Link>
-                    <span className="text-gray-400">&gt;</span>
-                    <span className="text-gray-800">Courses</span>
-                </div>
+                <NavbarSite page={"Courses"}/>
 
                 <section className="mb-12">
                     <h1 className="text-3xl font-bold mb-2">Explore Courses</h1>
@@ -70,22 +64,19 @@ const Courses: React.FC = () => {
                             category="Programming"
                             title="Introduction to Python"
                             description="Learn Python basics and build your first application in 8 weeks"
-                            courseId={"1"}
-                        />
+                            courseId={"1"} price={0} averageGrade={0}/>
                         <CourseCard
                             icon="layout"
                             category="Design"
                             title="UI/UX Fundamentals"
                             description="Master the principles of user interface and experience design"
-                            courseId={"2"}
-                        />
+                            courseId={"2"} price={0} averageGrade={0}/>
                         <CourseCard
                             icon="trending-up"
                             category="Business"
                             title="Digital Marketing"
                             description="Comprehensive guide to modern marketing strategies"
-                            courseId={"3"}
-                        />
+                            courseId={"3"} price={0} averageGrade={0}/>
                     </div>
                 </section>
 
@@ -98,24 +89,21 @@ const Courses: React.FC = () => {
                             category="Programming"
                             title="Web Development Bootcamp"
                             description="Full-stack development with HTML, CSS, JavaScript and Node.js"
-                            courseId={"4"}
-
+                            courseId={"4"} price={0} averageGrade={0}
                         />
                         <CourseCard
                             icon="globe"
                             category="Languages"
                             title="Spanish for Beginners"
                             description="Learn conversational Spanish in just 10 weeks"
-                            courseId={"5"}
-
+                            courseId={"5"} price={0} averageGrade={0}
                         />
                         <CourseCard
                             icon="building"
                             category="Business"
                             title="Financial Literacy"
                             description="Essential knowledge for personal and business finance"
-                            courseId={"5"}
-
+                            courseId={"5"} price={0} averageGrade={0}
                         />
                     </div>
                 </section>
