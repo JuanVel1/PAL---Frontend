@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import CourseCard from '../Components/CourseCard.tsx';
 import { Link } from 'react-router-dom';
-import { getCourses, createCourse, updateCourse, deleteCourse, addContent } from '../Services/CourseService';
+import { getCourses, createCourse, updateCourse, deleteCourse } from '../Services/CourseService';
+import { addContent, getContentByCourseId } from '../Services/ContentService.ts';
 import { categoryService, Category, ApiResponse } from '../Services/CategoryService';
 
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [courseContents, setCourseContents] = useState<{[key: string]: any[]}>({});
 
   // Estado para el nuevo curso y el curso en edición
   const [newCourse, setNewCourse] = useState({
@@ -30,6 +32,7 @@ const Courses: React.FC = () => {
   });
 
   const [isAddingContent, setIsAddingContent] = useState(false); // Estado para mostrar formulario de agregar contenido
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null); // Curso seleccionado para agregar contenido
 
   // Obtener los cursos y categorías al cargar la página
   useEffect(() => {
@@ -39,8 +42,16 @@ const Courses: React.FC = () => {
         const categoriesData: ApiResponse<Category> = await categoryService.getCategories();
         setCourses(coursesData.data);
         setCategories(categoriesData.data);
+        
+        // Cargar el contenido para cada curso
+        const contents: {[key: string]: any[]} = {};
+        for (const course of coursesData.data) {
+          const contentData = await getContentByCourseId(course.id);
+          contents[course.id] = contentData.data || [];
+        }
+        setCourseContents(contents);
       } catch (error) {
-        console.error('Error al obtener los cursos o categorías', error);
+        console.error('Error al obtener los cursos, categorías o contenidos', error);
       } finally {
         setLoading(false);
       }
@@ -52,8 +63,8 @@ const Courses: React.FC = () => {
   // Crear un nuevo curso
   const handleCreateCourse = async () => {
     try {
-      await createCourse({ ...newCourse, category: newCourse.category_name, instructorId: newCourse.instructor_id });
-      // Llamamos a fetchCoursesAndCategories para actualizar la lista de cursos
+      const response = await createCourse({ ...newCourse, category: newCourse.category_name, instructorId: newCourse.instructor_id });
+      // Actualizamos la lista de cursos
       await fetchCoursesAndCategories();
       setNewCourse({
         title: '',
@@ -73,7 +84,7 @@ const Courses: React.FC = () => {
   const handleDeleteCourse = async (courseId: string) => {
     try {
       await deleteCourse(courseId);
-      // Llamamos a fetchCoursesAndCategories para actualizar la lista de cursos
+      // Actualizamos la lista de cursos
       await fetchCoursesAndCategories();
     } catch (error) {
       console.error('Error al eliminar el curso', error);
@@ -85,7 +96,7 @@ const Courses: React.FC = () => {
     if (editingCourse) {
       try {
         await updateCourse(editingCourse.id, { ...newCourse, category: newCourse.category_name, instructorId: newCourse.instructor_id });
-        // Llamamos a fetchCoursesAndCategories para actualizar la lista de cursos
+        // Actualizamos la lista de cursos
         await fetchCoursesAndCategories();
         setIsEditing(false);
         setEditingCourse(null);
@@ -131,33 +142,64 @@ const Courses: React.FC = () => {
     setContent((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Mostrar el formulario de agregar contenido
-  const handleAddContent = async (courseId: string) => {
-    try {
-        await addContent(courseId, content);  // Se pasa `courseId` y el contenido
-        await fetchCoursesAndCategories();    // Refrescar la lista de cursos
-        setContent({
-            type: '',
-            fileUrl: '',
-        });
-        setIsAddingContent(false);
-    } catch (error) {
-        console.error('Error al agregar contenido', error);
-    }
-};
+  // Preparar para agregar contenido a un curso específico
+  const handlePrepareAddContent = (courseId: string) => {
+    setSelectedCourseId(courseId);
+    setIsAddingContent(true);
+    setContent({
+      type: '',
+      url: '',
+    });
+  };
 
-  // Refrescar la lista de cursos y categorías
+  // Agregar contenido a un curso
+  const handleAddContent = async () => {
+    if (!selectedCourseId) return;
+    
+    try {
+      await addContent(selectedCourseId, {
+        type: content.type,
+        fileUrl: content.url,
+      });
+      
+      // Actualizar la lista de contenidos para este curso específico
+      const contentData = await getContentByCourseId(selectedCourseId);
+      setCourseContents(prev => ({
+        ...prev,
+        [selectedCourseId]: contentData.data || []
+      }));
+      
+      setContent({
+        type: '',
+        url: '',
+      });
+      setIsAddingContent(false);
+      setSelectedCourseId(null);
+    } catch (error) {
+      console.error('Error al agregar contenido', error);
+    }
+  };
+
+  // Refrescar la lista de cursos, categorías y contenidos
   const fetchCoursesAndCategories = async () => {
     try {
-      setLoading(true); // Mostrar loading mientras se hace la solicitud
+      setLoading(true);
       const coursesData = await getCourses();
       const categoriesData: ApiResponse<Category> = await categoryService.getCategories();
       setCourses(coursesData.data);
       setCategories(categoriesData.data);
+      
+      // Actualizar contenidos para todos los cursos
+      const contents: {[key: string]: any[]} = {};
+      for (const course of coursesData.data) {
+        const contentData = await getContentByCourseId(course.id);
+        contents[course.id] = contentData.data || [];
+      }
+      setCourseContents(contents);
     } catch (error) {
-      console.error('Error al obtener los cursos o categorías', error);
+      console.error('Error al obtener los cursos, categorías o contenidos', error);
     } finally {
-      setLoading(false); // Ocultar loading cuando termine la solicitud
+      setLoading(false);
     }
   };
 
@@ -203,7 +245,7 @@ const Courses: React.FC = () => {
             />
             <select
               className="px-4 py-2 border border-gray-300 rounded"
-              value={newCourse.category_name}  // Usamos category_name aquí
+              value={newCourse.category_name}
               onChange={handleCategoryChange}
             >
               <option value="">Selecciona una categoría</option>
@@ -237,68 +279,89 @@ const Courses: React.FC = () => {
                   price={course.price}
                   averageGrade={course.average_grade}
                 />
+                
                 {/* Mostrar contenido del curso */}
-                {course.content && course.content.length > 0 && (
+                {courseContents[course.id] && courseContents[course.id].length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-semibold">Content:</h4>
-                    <ul>
-                      {course.content.map((item: any, index: number) => (
-                        <li key={index}>
-                          <strong>{item.type}:</strong> <a href={item.fileUrl} target="_blank" className="text-blue-600">{item.fileUrl}</a>
+                    <ul className="pl-4 mt-2">
+                      {courseContents[course.id].map((item: any, index: number) => (
+                        <li key={index} className="mb-1">
+                          <strong>{item.type}:</strong> <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{item.fileUrl}</a>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
-                <div className="flex space-x-4">
+                
+                <div className="flex space-x-4 mt-4">
                   <button
                     onClick={() => handleEditCourse(course)}
-                    className="text-blue-600"
+                    className="text-blue-600 hover:underline"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteCourse(course.id)}
-                    className="text-red-600"
+                    className="text-red-600 hover:underline"
                   >
                     Delete
                   </button>
                   <button
-                    onClick={() => setIsAddingContent(true)}
-                    className="text-green-600"
+                    onClick={() => handlePrepareAddContent(course.id)}
+                    className="text-green-600 hover:underline"
                   >
                     Add Content
                   </button>
                 </div>
-                {isAddingContent && (
-                  <div>
-                    <h3>Add Content</h3>
-                    <input
-                      type="text"
-                      placeholder="Content Type"
-                      value={content.type}
-                      onChange={handleContentChange}
-                      name="type"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Content URL"
-                      value={content.url}
-                      onChange={handleContentChange}
-                      name="url"
-                    />
-                    <button
-                      onClick={() => handleAddContent(course.id)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md"
-                    >
-                      Add Content
-                    </button>
-                  </div>
-                )}
               </div>
             ))}
           </div>
         </section>
+
+        {/* Formulario para Agregar Contenido */}
+        {isAddingContent && selectedCourseId && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-md">
+              <h3 className="text-lg font-bold mb-4">Add Content</h3>
+              <div className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  placeholder="Content Type"
+                  className="px-4 py-2 border border-gray-300 rounded"
+                  value={content.type}
+                  onChange={handleContentChange}
+                  name="type"
+                />
+                <input
+                  type="text"
+                  placeholder="Content URL"
+                  className="px-4 py-2 border border-gray-300 rounded"
+                  value={content.url}
+                  onChange={handleContentChange}
+                  name="url"
+                />
+                <div className="flex justify-end space-x-2 mt-4">
+                  <button
+                    onClick={() => {
+                      setIsAddingContent(false);
+                      setSelectedCourseId(null);
+                    }}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddContent}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md"
+                  >
+                    Add Content
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Formulario de Edición de Curso */}
         {isEditing && editingCourse && (
@@ -330,7 +393,7 @@ const Courses: React.FC = () => {
               />
               <select
                 className="px-4 py-2 border border-gray-300 rounded"
-                value={newCourse.category_name} // Usamos category_name aquí también
+                value={newCourse.category_name}
                 onChange={handleCategoryChange}
               >
                 <option value="">Selecciona una categoría</option>
