@@ -1,10 +1,82 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import CourseCard from '../Components/CourseCard.tsx';
 import CategoryButton from '../Components/CategoryButton.tsx';
 import NavbarSite from '../Components/NavbarSite.tsx';
 import {Search} from "lucide-react"
 
+interface Category {
+    id: number;
+    name: string;
+}
+
+interface Instructor {
+    id: number;
+    username: string;
+    email: string;
+    roles: Array<any>;
+}
+
+interface Course {
+    id: number;
+    title: string;
+    description: string;
+    category: Category;
+    price: number;
+    instructor: Instructor;
+    status: string;
+    average_grade: number;
+}
+
 const Courses: React.FC = () => {
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [categoryError, setCategoryError] = useState(false);
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                const response = await fetch("http://localhost:8081/api/courses/all");
+                if (!response.ok) throw new Error("Error al obtener los cursos");
+
+                const result = await response.json();
+                if (result.data) {
+                    setCourses(result.data);
+                } else {
+                    setCourses([]);
+                }
+            } catch (err) {
+                setError(true);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCourses();
+    }, []);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch("http://localhost:8081/api/categories/all");
+                if (!response.ok) throw new Error("Error al obtener categorías");
+
+                const result = await response.json();
+                if (result.data) {
+                    setCategories(result.data);
+                } else {
+                    setCategories([]);
+                }
+            } catch (err) {
+                setCategoryError(true);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+
     return (
         <div className="container mx-auto p-6">
             <main className="container mx-auto px-4 py-8">
@@ -44,68 +116,79 @@ const Courses: React.FC = () => {
                         </div>
                     </div>
                 </section>
-
+                {/* Categories */}
                 <section className="mb-12">
                     <h2 className="text-xl font-bold mb-4">Categories</h2>
                     <div className="flex flex-wrap gap-4">
-                        <CategoryButton label="Programming"/>
-                        <CategoryButton label="Design"/>
-                        <CategoryButton label="Business"/>
-                        <CategoryButton label="Marketing"/>
-                        <CategoryButton label="Languages"/>
+                        {
+                            !categoryError && categories.length > 0 ?
+                                categories.map((category) => (
+                                    <CategoryButton key={category.id} label={category.name}/>
+                                )) :
+                                <div className="flex justify-center mt-6">
+                                    <p>
+                                        No se encontraron categorías
+                                    </p>
+                                </div>
+                        }
                     </div>
                 </section>
+
                 {/* Featured Courses Section */}
+                <h2 className="text-xl font-bold mb-6">Featured Courses</h2>
                 <section className="mb-12">
-                    <h2 className="text-xl font-bold mb-6">Featured Courses</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <CourseCard
-                            icon="code"
-                            category="Programming"
-                            title="Introduction to Python"
-                            description="Learn Python basics and build your first application in 8 weeks"
-                            courseId={"1"} price={0} averageGrade={0}/>
-                        <CourseCard
-                            icon="layout"
-                            category="Design"
-                            title="UI/UX Fundamentals"
-                            description="Master the principles of user interface and experience design"
-                            courseId={"2"} price={0} averageGrade={0}/>
-                        <CourseCard
-                            icon="trending-up"
-                            category="Business"
-                            title="Digital Marketing"
-                            description="Comprehensive guide to modern marketing strategies"
-                            courseId={"3"} price={0} averageGrade={0}/>
-                    </div>
+                    {
+                        !loading && !error && courses.length > 0 ?
+
+                            courses.map((course: Course) => (
+                                <CourseCard
+                                    key={course.id}
+                                    icon="code"
+                                    category={course.category.name}
+                                    title={course.title}
+                                    description={course.description}
+                                    courseId={course.id.toString()}
+                                    price={course.price}
+                                    averageGrade={course.average_grade}
+                                />))
+                            :
+                            <div className="flex justify-center mt-6">
+                                <p>
+                                    No se encontraron cursos
+                                </p>
+                            </div>
+                    }
                 </section>
+
 
                 {/* Most Popular Section */}
                 <section className="mb-12">
                     <h2 className="text-xl font-bold mb-6">Most Popular</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <CourseCard
-                            icon="monitor"
-                            category="Programming"
-                            title="Web Development Bootcamp"
-                            description="Full-stack development with HTML, CSS, JavaScript and Node.js"
-                            courseId={"4"} price={0} averageGrade={0}
-                        />
-                        <CourseCard
-                            icon="globe"
-                            category="Languages"
-                            title="Spanish for Beginners"
-                            description="Learn conversational Spanish in just 10 weeks"
-                            courseId={"5"} price={0} averageGrade={0}
-                        />
-                        <CourseCard
-                            icon="building"
-                            category="Business"
-                            title="Financial Literacy"
-                            description="Essential knowledge for personal and business finance"
-                            courseId={"5"} price={0} averageGrade={0}
-                        />
-                    </div>
+                    {
+                        !loading && !error && courses.length > 0 ?
+                            
+                            //Ordena los cursos en orden descendente según la calificación promedio (average_grade), de mayor a menor
+                            courses.sort((a: Course, b: Course) => b.average_grade - a.average_grade).slice(0, 3).map((course: Course) => (
+                                <CourseCard
+                                    key={course.id}
+                                    icon="star"
+                                    category={course.category.name}
+                                    title={course.title}
+                                    description={course.description}
+                                    courseId={course.id.toString()}
+                                    price={course.price}
+                                    averageGrade={course.average_grade}
+                                />
+                            ))
+
+                            :
+                            <div className="flex justify-center mt-6">
+                                <p>
+                                    No se encontraron cursos
+                                </p>
+                            </div>
+                    }
+
                 </section>
 
                 {/* Load More Button */}

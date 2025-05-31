@@ -11,18 +11,16 @@ const Categories: React.FC = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/categories/all");
+                const response = await fetch("http://localhost:8081/api/categories/all");
                 if (!response.ok) throw new Error("Error al obtener las categorías");
 
                 const result = await response.json();
                 if (result.data) {
                     setCategories(result.data);
-                    console.log("Categorías cargadas:", result.data);
                 } else {
                     setCategories([]);
                 }
             } catch (err) {
-                console.error("Error en la solicitud:", err);
                 setError(true);
             } finally {
                 setLoading(false);

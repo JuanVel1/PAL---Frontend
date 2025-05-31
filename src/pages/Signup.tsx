@@ -3,7 +3,7 @@ import NavbarSite from "../Components/NavbarSite.tsx";
 
 
 export default function Signup() {
-    const [userType, setUserType] = useState('student');
+    const [userType, setUserType] = useState('estudiante');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -15,37 +15,38 @@ export default function Signup() {
             alert('Las contraseñas no coinciden');
             return;
         }
-        const queryParams = new URLSearchParams();
-        queryParams.append("username", username);
-        queryParams.append("password", password);
-        queryParams.append("roles", userType + "010"); // Si necesitas varios roles, agrégales en un loop
 
-        const url = `http://localhost:8080/api/users/create?${queryParams.toString()}`;
-        console.log("URL generada:", url);
+        const formData = {
+            username,
+            password,
+            email,
+            roles: [userType]
+        };
 
+        const url = `http://localhost:8081/api/users/create`;
 
         try {
             const response = await fetch(url, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
             });
 
-            if (!response.ok) {
-                throw new Error('Error al crear el usuario');
-            }
             const result = await response.json();
-            if (result.status === 200 || result.status === 201) {
+            if (result['message'] == 'User created successfully') {
                 alert('Usuario creado correctamente');
+                setEmail('');
+                setUsername('');
+                setPassword('');
+                setConfirmPassword('');
+            } else {
+                alert('Error al crear el usuario');
             }
-            console.log(result);
         } catch (error) {
             console.error('Error en la solicitud:', error);
             alert('Error de conexión con el servidor');
-        } finally {
-            setEmail('');
-            setUsername('');
-            setPassword('');
-            setConfirmPassword('');
-            alert("Usuario creado correctamente");
         }
     };
 
@@ -61,11 +62,12 @@ export default function Signup() {
                             <h1 className="text-2xl font-bold mb-6 text-center">Create Your Account</h1>
                             <div className="flex justify-center space-x-4">
                                 <button type="button" onClick={() => setUserType('student')}
-                                        className={`w-60 py-2 px-4 border rounded-md text-white ${userType === 'student' ? 'bg-blue-400' : 'bg-blue-600'}`}>
+                                        className={`w-60 py-2 px-4 border rounded-md text-white ${userType === 'estudiante' ? 'bg-yellow-400' : 'bg-blue-400 hover:bg-blue-600 transition '}`}
+                                >
                                     Student
                                 </button>
                                 <button type="button" onClick={() => setUserType('instructor')}
-                                        className={`w-60 py-2 px-4 border rounded-md text-white ${userType === 'instructor' ? 'bg-green-400' : 'bg-green-600'}`}>
+                                        className={`w-60 py-2 px-4 border rounded-md text-white ${userType === 'instructor' ? 'bg-yellow-400 ' : 'bg-green-400 hover:bg-green-600 transition '}`}>
                                     Instructor
                                 </button>
                             </div>

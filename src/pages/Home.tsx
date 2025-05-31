@@ -1,17 +1,7 @@
 import {Link} from "react-router-dom";
-import gsap from "gsap";
 
 export default function Home() {
-    gsap.to(
-        ".star",
-        {
-            rotate: 360,
-            duration: 2,
-            repeat: -1,
-            ease: "bounce",
-            transformOrigin: "center center"
-        }
-    )
+
     return (
         <div className="h-screen flex flex-col items-center justify-center"
              style={{
@@ -36,23 +26,37 @@ export default function Home() {
 
                 <div className="mt-6 flex space-x-4 justify-center">
                     <Link to="/login"
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md transition">
+                          className="border-1 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-yellow-500 hover:text-black transition">
                         Log In
                     </Link>
 
                     <Link to="/signup"
-                          className="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg shadow-md hover:bg-gray-300 transition">
+                          className="border-1 px-6 py-2 bg-gray-200 text-gray-900 rounded-lg shadow-md hover:bg-yellow-500 hover:text-black transition">
                         Sign Up
                     </Link>
                 </div>
-                <div className="mt-6 flex space-x-4 justify-center">
-                    <Link to="/categories">
-                        <button
-                            className="px-6 py-2 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition">
-                            Explore Categories
-                        </button>
-                    </Link>
+                <p className="text-xl font-bold rounded-lg text-white bg-blue-900 border-1 border-rounded px-6 py-2 mt-4 max-w-md relative inline-block">
+                    Explore now!
+                </p>
+                <div className="flex justify-center">
+                    <div className="mt-6 flex space-x-4 justify-center">
+                        <Link to="/categories">
+                            <button
+                                className="border-1 px-6 py-2 bg-pink-600 text-white rounded-lg shadow-md hover:bg-yellow-500  hover:text-black transition">
+                                Categories
+                            </button>
+                        </Link>
+                    </div>
+                    <div className="mt-6 flex space-x-4 justify-center">
+                        <Link to="/courses">
+                            <button
+                                className="border-1 px-6 py-2 bg-pink-600 text-white rounded-lg shadow-md hover:bg-yellow-500 hover:text-black transition">
+                                Courses
+                            </button>
+                        </Link>
+                    </div>
                 </div>
+
             </div>
         </div>
     );
